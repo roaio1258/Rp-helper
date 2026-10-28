@@ -83,25 +83,7 @@ h1{margin:0 0 8px;font:700 38px/1.15 var(--serif);letter-spacing:-.5px}
 .rule .ds{margin:0;color:#c9d1e6;font-size:14px;line-height:1.6;white-space:pre-line}
 .rgrp{color:var(--mut);font-size:13px;margin:18px 0 -2px}
 
-.chat{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:340px;max-width:900px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.chead{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
-.chead input{width:170px;padding:8px 12px;background:#0a1122;border:1px solid var(--line);border-radius:10px;color:var(--tx);font-size:14px;outline:none}
-.chead input:focus,.cform input:focus{border-color:var(--brass)}
-#cstat{margin-left:auto;font-size:13px;color:var(--mut)}
-#cstat.on{color:#7be0a0}
-#cmsgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:78%;background:#0a1122;border:1px solid var(--line);border-radius:12px;padding:8px 12px;align-self:flex-start}
-.msg.me{align-self:flex-end;background:#d9b36c14;border-color:#d9b36c55}
-.msg .mh{display:flex;gap:10px;align-items:baseline;font-size:12px;margin-bottom:3px}
-.msg .mh b{font-size:13px}
-.msg .mh span{color:var(--mut)}
-.msg .mt{font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.cform{display:flex;gap:10px;padding:12px;border-top:1px solid var(--line);background:var(--panel)}
-.cform input{flex:1;padding:12px 14px;background:#0a1122;border:1px solid var(--line);border-radius:10px;color:var(--tx);font-size:15px;outline:none}
-.csetup{max-width:900px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--brass);border-radius:12px;padding:18px 22px;line-height:1.7;font-size:14px}
-.csetup ol{margin:8px 0 14px;padding-left:20px}
-.csetup code{font-family:var(--mono);background:#0a1122;padding:1px 6px;border-radius:6px}
-@media(max-width:760px){body{flex-direction:column}aside{width:auto;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px}.logo{display:none}#nav{display:flex;gap:6px;overflow-x:auto}.nav{width:auto;white-space:nowrap;border-radius:10px;margin:0;flex:none}main{padding:22px 16px}h1{font-size:30px}.rule .rh{flex-direction:column;gap:6px}.chat{height:calc(100vh - 260px)}.msg{max-width:90%}}
+@media(max-width:760px){body{flex-direction:column}aside{width:auto;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px}.logo{display:none}#nav{display:flex;gap:6px;overflow-x:auto}.nav{width:auto;white-space:nowrap;border-radius:10px;margin:0;flex:none}main{padding:22px 16px}h1{font-size:30px}.rule .rh{flex-direction:column;gap:6px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -130,32 +112,6 @@ h1{margin:0 0 8px;font:700 38px/1.15 var(--serif);letter-spacing:-.5px}
     <input id="rq" placeholder="Номер (например 2.1) или название (например ДМ, NLR)...">
     <div class="bar"><div class="chips" id="rchips"></div></div>
     <div class="rl" id="rlist"></div>
-  </section>
-
-  <section id="vChat" style="display:none">
-    <h1>Чат</h1>
-    <div class="sub">Общий чат для всех, кто открыл сайт. Сообщения приходят сразу.</div>
-    <div class="csetup" id="csetup" style="display:none">
-      <b>Чат ещё не подключён.</b> Нужна бесплатная база Firebase:
-      <ol>
-        <li>Зайди на console.firebase.google.com и создай проект (Google Analytics не нужен).</li>
-        <li>Открой Build → Realtime Database → Create Database, выбери любой регион и режим Locked.</li>
-        <li>На вкладке Rules вставь правила кнопкой ниже и нажми Publish.</li>
-        <li>Скопируй ссылку базы с вкладки Data (вида <code>https://имя-default-rtdb.firebaseio.com</code>) и вставь в <code>index.html</code> в строку <code>const FIREBASE_URL = ''</code>.</li>
-      </ol>
-      <button class="btn pri" id="cRules">Скопировать правила базы</button>
-    </div>
-    <div class="chat" id="cbox">
-      <div class="chead">
-        <input id="cnick" maxlength="20" placeholder="Твой ник" aria-label="Твой ник">
-        <span id="cstat">Подключение...</span>
-      </div>
-      <div id="cmsgs"></div>
-      <div class="cform">
-        <input id="cin" maxlength="300" placeholder="Напиши сообщение и нажми Enter" autocomplete="off" aria-label="Сообщение">
-        <button class="btn pri" id="csend">Отправить</button>
-      </div>
-    </div>
   </section>
 
   <section id="vNotes" style="display:none">
@@ -330,68 +286,6 @@ function renderRules() {
 }
 $('rq').oninput = renderRules;
 
-const FIREBASE_URL = ''; // вставь сюда ссылку базы, например https://my-chat-default-rtdb.firebaseio.com
-const DB_RULES = '{"rules":{"chat":{".read":true,"$id":{".write":"!data.exists() && newData.exists()",".validate":"newData.hasChildren([\'n\',\'t\',\'ts\']) && newData.child(\'n\').isString() && newData.child(\'n\').val().length>0 && newData.child(\'n\').val().length<=20 && newData.child(\'t\').isString() && newData.child(\'t\').val().length>0 && newData.child(\'t\').val().length<=300 && newData.child(\'ts\').val()===now"}}}}';
-const CH = {es: null, msgs: new Map(), last: 0, me: ''};
-try { CH.me = localStorage.getItem('rphelper_nick') || ''; } catch (e) {}
-const cstat = t => { const s = $('cstat'); s.textContent = t; s.className = t === 'В сети' ? 'on' : ''; };
-function chatColor(n) { let x = 0; for (const c of n) x = (x * 31 + c.charCodeAt(0)) % 360; return 'hsl(' + x + ',70%,72%)'; }
-function chatApply(path, data) {
-  if (path === '/') { CH.msgs.clear(); if (data) Object.keys(data).forEach(k => CH.msgs.set(k, data[k])); }
-  else { const k = path.slice(1); if (data === null) CH.msgs.delete(k); else CH.msgs.set(k, data); }
-  chatRender();
-}
-function chatRender() {
-  const box = $('cmsgs');
-  const near = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
-  box.innerHTML = '';
-  const nick = $('cnick').value.trim();
-  [...CH.msgs.keys()].sort().forEach(k => {
-    const m = CH.msgs.get(k);
-    if (!m || typeof m.n !== 'string' || typeof m.t !== 'string') return;
-    const d = el('div', 'msg' + (nick && m.n === nick ? ' me' : ''));
-    const h = el('div', 'mh'); const b = el('b', '', m.n); b.style.color = chatColor(m.n);
-    h.appendChild(b);
-    if (typeof m.ts === 'number') h.appendChild(el('span', '', new Date(m.ts).toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})));
-    d.append(h, el('div', 'mt', m.t));
-    box.appendChild(d);
-  });
-  if (!CH.msgs.size) box.appendChild(el('div', 'empty', 'Сообщений пока нет. Напиши первым.'));
-  if (near) box.scrollTop = box.scrollHeight;
-}
-function chatOpen() {
-  const ok = !!FIREBASE_URL;
-  $('csetup').style.display = ok ? 'none' : 'block';
-  $('cbox').style.display = ok ? '' : 'none';
-  if (!ok || CH.es) return;
-  const url = FIREBASE_URL.replace(/\/$/, '') + '/chat.json?orderBy=%22%24key%22&limitToLast=100';
-  const es = CH.es = new EventSource(url);
-  cstat('Подключение...');
-  es.onopen = () => cstat('В сети');
-  es.onerror = () => cstat('Нет связи, переподключаюсь...');
-  es.addEventListener('put', e => { const d = JSON.parse(e.data); chatApply(d.path, d.data); const b = $('cmsgs'); b.scrollTop = b.scrollHeight; });
-  es.addEventListener('patch', e => { const d = JSON.parse(e.data); if (d.path === '/' && d.data) Object.keys(d.data).forEach(k => chatApply('/' + k, d.data[k])); });
-  es.addEventListener('cancel', () => cstat('Нет доступа. Проверь правила базы.'));
-}
-function chatClose() { if (CH.es) { CH.es.close(); CH.es = null; } }
-function chatSend() {
-  const nick = $('cnick').value.trim(), text = $('cin').value.trim();
-  if (!nick) { $('cnick').focus(); cstat('Сначала введи ник'); return; }
-  if (!text) return;
-  if (Date.now() - CH.last < 1500) { cstat('Не так быстро'); return; }
-  CH.last = Date.now();
-  try { localStorage.setItem('rphelper_nick', nick); } catch (e) {}
-  $('cin').value = '';
-  fetch(FIREBASE_URL.replace(/\/$/, '') + '/chat.json', {
-    method: 'POST', body: JSON.stringify({n: nick, t: text, ts: {'.sv': 'timestamp'}})
-  }).then(r => { if (!r.ok) throw 0; cstat('В сети'); }).catch(() => { $('cin').value = text; cstat('Не отправлено. Проверь связь и правила базы.'); });
-}
-$('cnick').value = CH.me;
-$('csend').onclick = chatSend;
-$('cin').onkeydown = e => { if (e.key === 'Enter') chatSend(); };
-$('cnick').onchange = () => { try { localStorage.setItem('rphelper_nick', $('cnick').value.trim()); } catch (e) {} chatRender(); };
-$('cRules').onclick = () => copy(DB_RULES);
-
 let view = 'main';
 function syncNav() {
   const nav = $('nav'); nav.innerHTML = '';
@@ -406,13 +300,10 @@ function syncNav() {
   const IC = {'Отыгровки': '🎭', 'Общение': '💬', 'ФСБ': '🕵️', 'ОПГ': '💼', 'МВД': '🚔'};
   cats().forEach(c => add((IC[c] || '📁') + ' ' + c, 'main', c));
   add('⚖ Правила', 'rules');
-  add('💬 Чат', 'chat');
   add('📝 Заметки', 'notes');
   $('vMain').style.display = view === 'main' ? '' : 'none';
   $('vRules').style.display = view === 'rules' ? '' : 'none';
   if (view === 'rules') renderRules();
-  $('vChat').style.display = view === 'chat' ? '' : 'none';
-  if (view === 'chat') chatOpen(); else chatClose();
   $('vNotes').style.display = view === 'notes' ? '' : 'none';
   $('hMain').textContent = cat === 'Все' ? 'Тексты для РП' : cat;
 }
