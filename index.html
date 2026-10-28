@@ -205,7 +205,8 @@ function syncNav() {
     nav.appendChild(b);
   };
   add('📖 Все тексты', 'main', 'Все');
-  cats().forEach(c => add((c === 'Отыгровки' ? '🎭 ' : c === 'Общение' ? '💬 ' : '📁 ') + c, 'main', c));
+  const IC = {'Отыгровки': '🎭', 'Общение': '💬', 'ФСБ': '🕵️', 'ОПГ': '💼', 'МВД': '🚔'};
+  cats().forEach(c => add((IC[c] || '📁') + ' ' + c, 'main', c));
   add('📝 Заметки', 'notes');
   $('vMain').style.display = view === 'main' ? '' : 'none';
   $('vNotes').style.display = view === 'notes' ? '' : 'none';
