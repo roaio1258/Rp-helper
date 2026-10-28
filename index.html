@@ -21,8 +21,8 @@ aside{width:236px;background:var(--panel);border-right:1px solid var(--line);pad
 main{flex:1;padding:44px 52px;min-width:0;max-width:1400px}
 h1{margin:0 0 8px;font:700 38px/1.15 var(--serif);letter-spacing:-.5px}
 .sub{color:var(--mut);margin-bottom:26px;font-size:15px}
-#q{width:100%;padding:15px 18px 15px 46px;background:#0d1424 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%238d97b3' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M13 13l4 4'/%3E%3C/svg%3E") no-repeat 16px center;border:1px solid var(--line);border-radius:12px;color:var(--tx);font-size:15px;outline:none;transition:border-color .15s}
-#q:focus{border-color:var(--brass)}
+#q,#rq{width:100%;padding:15px 18px 15px 46px;background:#0d1424 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%238d97b3' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M13 13l4 4'/%3E%3C/svg%3E") no-repeat 16px center;border:1px solid var(--line);border-radius:12px;color:var(--tx);font-size:15px;outline:none;transition:border-color .15s}
+#q:focus,#rq:focus{border-color:var(--brass)}
 .bar{display:flex;gap:10px;align-items:center;margin:22px 0 26px;flex-wrap:wrap}
 .chips{display:flex;gap:8px;flex-wrap:wrap;flex:1}
 .chip{background:transparent;border:1px solid var(--line);color:var(--mut);padding:8px 17px;border-radius:999px;cursor:pointer;font-size:14px;transition:.15s}
@@ -70,7 +70,19 @@ h1{margin:0 0 8px;font:700 38px/1.15 var(--serif);letter-spacing:-.5px}
 .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--brass);color:#1a1405;font-weight:700;padding:12px 22px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:760px){aside{display:none}main{padding:26px 16px}h1{font-size:30px}}
+
+.rl{display:grid;gap:12px;max-width:900px}
+.rule{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--brass);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.rule:hover{border-color:var(--brass);box-shadow:0 8px 24px #00000055}
+.rule.ok{box-shadow:0 0 0 2px #ffffff22}
+.rule .rh{display:flex;gap:12px;align-items:baseline;margin-bottom:10px}
+.rule .rn{font:700 14px var(--mono);color:var(--brass2);background:#d9b36c1a;border-radius:8px;padding:3px 9px;flex:none}
+.rule h3{margin:0;font:700 18px/1.3 var(--serif)}
+.rule .pen{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.rule .pen span{font:600 13px var(--mono);color:#ff9aa7;background:#42111f;border:1px solid #85253b;border-radius:8px;padding:4px 10px;white-space:pre-wrap}
+.rule .ds{margin:0;color:#c9d1e6;font-size:14px;line-height:1.6;white-space:pre-line}
+.rgrp{color:var(--mut);font-size:13px;margin:18px 0 -2px}
+@media(max-width:760px){body{flex-direction:column}aside{width:auto;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px}.logo{display:none}#nav{display:flex;gap:6px;overflow-x:auto}.nav{width:auto;white-space:nowrap;border-radius:10px;margin:0;flex:none}main{padding:22px 16px}h1{font-size:30px}.rule .rh{flex-direction:column;gap:6px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -91,6 +103,14 @@ h1{margin:0 0 8px;font:700 38px/1.15 var(--serif);letter-spacing:-.5px}
       <button class="btn pri" id="addItem">+ Свой текст</button>
     </div>
     <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="vRules" style="display:none">
+    <h1>Правила сервера</h1>
+    <div class="sub">Нажми на правило, и оно скопируется вместе с наказанием.</div>
+    <input id="rq" placeholder="Поиск по номеру, названию или тексту правила...">
+    <div class="bar"><div class="chips" id="rchips"></div></div>
+    <div class="rl" id="rlist"></div>
   </section>
 
   <section id="vNotes" style="display:none">
@@ -220,11 +240,43 @@ $('fDel').onclick = () => {
 };
 $('q').oninput = render;
 
+
+const RULES = {"groups":{"1":"НонРП","2":"Убийства","3":"Игровые нарушения","4":"Чат и общение","5":"Темы и реклама","6":"Ролевая игра","7":"Политика, религия, фракции"},"rules":[{"id":"1.0","title":"НонРП (НРП)","pen":"15-25m jail / 1d-7d ban","desc":"Не относящееся к ролевой игре поведение: игнорирование отыгровок партнёра, отказ от взаимодействия использование внутриигровых механик для получения выгоды вне РП-контекста.","g":"1"},{"id":"1.0.1","title":"Помеха РП","pen":"kick / 15-20m jail / 1d-3d ban","desc":"Намеренное создание препятствий для ролевого процесса других игроков. Примеры: блокировка прохода/въезда, хаотичная стрельба в воздух рядом с местом РП, постоянное вмешательство в чужую отыгровку без причины, использование транспортных средств для тарана мест массового скопления игроков.","g":"1"},{"id":"1.1","title":"НонРП Драйв (НРД)","pen":"5-10m jail / 1d ban","desc":"Езда вне дороги, по тротуарам, газонам, ж/д рельсам","g":"1"},{"id":"1.2","title":"НонРП форма","pen":"15-20m jail / 1d ban","desc":"1. Запрещены неэстетичные и нереалистичные аксессуары, не соответствующие форме или среде (розовые очки-сердца, гигантские головные уборы, маски животных).\n2. Для госструктур: Разрешена кастомная униформа из маркетплейса, если она не противоречит правилу.\n3. Для гражданских: запрещены нечеловеческие конечности, мультяшные лица, а также костюмы техники (например, отыгровка «Я автомобиль»).","g":"1"},{"id":"2.0","title":"ДМ (DeathMatch)","pen":"20-40m jail / 1d-3d ban","desc":"Убийство игрока без ролевой причины (не было словесного конфликта, угрозы, агрессивных действий в ваш адрес). Убийство \" за компанию\" или \" просто так\" также попадает под этот пункт.","g":"2"},{"id":"2.1","title":"SK (SpawnKill)","pen":"20-25m jail / 1d-3d ban","desc":"Убийство игрока в момент его возрождения на спавне, когда он ещё не может полноценно реагировать.","g":"2"},{"id":"2.2","title":"TK (TeamKill)","pen":"20-25m jail / 1d-3d ban","desc":"Убийство союзника по команде (например, сотрудника ФСБ - сотрудником УФСБ; члена одной ОПГ - членом этой же ОПГ).  Умышленное нанесение урона союзным фракциям (например, полиция и ФСБ - считаются союзниками) приравнивается к TK.","g":"2"},{"id":"2.3","title":"Массовый ДМ","pen":"3d-7d-14d ban","desc":"Убийство трёх и более игроков в короткий промежуток времени без должной ролевой подготовки (объявление войны, предупреждения, захват заложников).","g":"2"},{"id":"2.4","title":"RVK (RK / RevengeKill)","pen":"20-30m jail / 1d-7d ban","desc":"Убийство игрока с целью мести за предыдущую смерть, если с момента инцидента не прошло достаточно времени и не было новой отыгровки конфликта. Запрещено возвращаться на место своей смерти для \" разборок\"  в течение 5 минут (согласно NLR).","g":"2"},{"id":"3.0","title":"PG (PowerGaming)","pen":"20-25m jail / 1d-7d ban","desc":"Выполнение действий, физически невозможных в реальности: победа в рукопашной против 3+ вооружённых противников, прыжки с большой высоты без последствий.","g":"3"},{"id":"3.1","title":"Багоюз (BugAbuse)","pen":"Незначительные баги – 3d-7d-14d ban\nЗначительные баги – 14d-30d-60d-Perm ban","desc":"Использование недоработок игры для получения преимущества: проход сквозь текстуры, дюп валюты. Случайное попадание в баг должно быть сразу сообщено администрации.","g":"3"},{"id":"3.2","title":"Обход бана (BanEvade)","pen":"60d ban (на оба аккаунта) / Perm ban","desc":"Создание нового аккаунта для входа на сервер во время действующего наказания.","g":"3"},{"id":"4.0","title":"Флуд в чате (Flood)","pen":"Server kick / Ban 1h","desc":"Спам более 3 однотипных сообщений подряд.","g":"4"},{"id":"4.1","title":"Упоминание/Оскорбление родных","pen":"3d, 7d, 14d, 30d, 60d ban","desc":"Любые высказывания, порочащие честь и достоинство родственников игроков. (Исключение: если игроки в РП процессе, пример \"да я к его мамке сейчас приеду\")","g":"4"},{"id":"4.2","title":"Оскорбление игроков","pen":"3h, 6h, 12h, 1d, 3d ban","desc":"Грубые личные оскорбления, унижение, переход на личности в любом чате Исключение - оскорбления в рамках РП-конфликта, но без перехода на реальные национальности/убеждения.","g":"4"},{"id":"4.3","title":"Оскорбление Администрации","pen":"3d, 7d, 14d, 30d, Perm ban","desc":"Прямые оскорбления, угрозы в адрес представителей администрации, а также клевета на них. Конструктивная критика допустима только в личных сообщениях или специальном разделе.","g":"4"},{"id":"4.4","title":"Оскорбление проекта","pen":"3d, 7d, 14d, 30d, Perm ban","desc":"Прямые высказывания с целью унижения сервера, его механик или команды (\"проект мертв\", \"проект говно\"). Конструктивная критика и предложения по улучшению не являются нарушением.","g":"4"},{"id":"4.5","title":"MG (MetaGaming)","pen":"10-15m jail / 1-3h ban","desc":"Использование информации из реальной жизни (информация из Discord/форума, голосовые чаты вне игры) в игровом процессе.","g":"4"},{"id":"5.0","title":"Упоминание наркотических средств в общем чате","pen":"10-15m jail","desc":"Прямые названия наркотиков (реальных) в публичных чатах. В рамках РП торговля внутри игры разрешена, но обсуждение реальных веществ - запрещено.","g":"5"},{"id":"5.1","title":"Прямое упоминание терроризма в общем чате","pen":"1-3d ban","desc":"Угрозы терактов, призывы к насилию в реальной жизни, обсуждение реальных террористических организаций.","g":"5"},{"id":"5.2","title":"Реклама других проектов","pen":"Perm ban","desc":"Публикация названий, ссылок на другие игровые проекты (сервера, игры) с целью переманивания игроков.","g":"5"},{"id":"5.3","title":"Реклама неофициальных организаций","pen":"14d – 30d – Perm Ban","desc":"Создание и приглашение в ОПГ/банды/ГОСС структуры, не прошедшие регистрацию у администрации проекта, если они имеют свой дискорд/сайт/иную систему коммуникации вне сервера.","g":"5"},{"id":"6.0","title":"ERP (EroticRP)","pen":"3d, 7d, 30d, 60d ban / Perm ban","desc":"Запрещены любые действия и отыгровки сексуального характера (обозначения половых актов, домогательства, словесные описания в чате, имитация движений). Допустим только намёк на романтику, но без детализации.","g":"6"},{"id":"6.1","title":"Уход от РП (RP)","pen":"20-25m jail / 1d-7d ban","desc":"Выход из игры/ресет в момент активного ролевого взаимодействия, перезаход на сервер для избегания последствий, а также игнорирование РП-действий партнёра.","g":"6"},{"id":"6.2","title":"Отыгровки в свою сторону","pen":"20-30m jail / 1d ban","desc":"Использование команды /try или /do для получения фактов о другом игроке без его согласия (например: \"/try Нашёл в кармане у гражданина X пистолет\"). Все действия, касающиеся других игроков, должны проходить через взаимную отыгровку (обыск, согласие).","g":"6"},{"id":"6.3","title":"Выдача себя за администрацию/разработчиков","pen":"3d, 7d, 14d ban","desc":"Использование никнеймов, стиля общения, угроз от имени администрации, выдача себя за сотрудника проекта для получения преимущества или запугивания игроков.","g":"6"},{"id":"6.4","title":"Обман администрации","pen":"3d, 7d, 14d, 30d ban, Perm ban","desc":"Предоставление ложной информации в тикетах, жалобах, при общении с админами с целью введения их в заблуждение или получения выгоды (например, ложный донос на игрока).","g":"6"},{"id":"6.5","title":"Наручники / Дубинка в ПВП","pen":"20-25m jail / 1d ban","desc":"Запрещено нападать на вооружённого игрока с дубинкой или наручниками в лоб. Разрешено только со спины.","g":"6"},{"id":"6.6","title":"NLR (NewLifeRule)","pen":"15-25m jail / 1-3d ban","desc":"После смерти персонаж забывает все события, произошедшие за последние 5 минут до смерти, а также всю информацию о группе лиц, участвовавшей в его смерти. Запрещено сразу возвращаться на место гибели.","g":"6"},{"id":"7.0","title":"Любое упоминание политики","pen":"1d-3d ban","desc":"Обсуждение реальных политических деятелей, партий, международных конфликтов, выборов и идеологий в любых игровых чатах. Даже в шуточной форме.","g":"7"},{"id":"7.1","title":"Оскорбление религий","pen":"1d, 3d, 7d, 14d ban","desc":"Уничижительные высказывания о любых религиозных конфессиях, их символах, обычаях и верующих. В рамках РП допустим конфликт на почве религий, но без перехода на реальные личности и без экстремизма.","g":"7"},{"id":"7.2","title":"Провокация полиции","pen":"15m jail / 1d ban","desc":"Умышленный вызов полиции для последующего их байтинга/убийства/похищения.","g":"7"},{"id":"7.3","title":"Отыгровка несуществующего снаряжения","pen":"20-30m jail / 1d-3d ban","desc":"Запрещается в устной или текстовой отыгровке заявлять о наличии у персонажа предметов, которых нет в его инвентаре (оружие, броня)","g":"7"},{"id":"7.4","title":"Отыгровка другой фракции","pen":"15-20m jail / 12h–1d ban","desc":"Запрещается выдавать себя за сотрудника другой фракции, если вы не состоит в этой фракции и не имеет соответствующей роли. Это касается как формы одежды, так и словесных заявлений (\"я ФСБ, отойдите,\" каждый должен отыгрывать за ту фракцию за которую уже зашел.)","g":"7"}]};
+let rgrp = 'all';
+function renderRules() {
+  const chips = $('rchips'); chips.innerHTML = '';
+  const mk = (k, label) => {
+    const b = el('button', 'chip' + (k === rgrp ? ' on' : ''), label);
+    b.onclick = () => { rgrp = k; renderRules(); };
+    chips.appendChild(b);
+  };
+  mk('all', 'Все');
+  Object.keys(RULES.groups).forEach(k => mk(k, k + '. ' + RULES.groups[k]));
+  const q = $('rq').value.trim().toLowerCase();
+  const list = RULES.rules.filter(r => (rgrp === 'all' || r.g === rgrp) &&
+    (!q || (r.id + ' ' + r.title + ' ' + r.pen + ' ' + r.desc).toLowerCase().includes(q)));
+  const box = $('rlist'); box.innerHTML = '';
+  if (!list.length) box.appendChild(el('div', 'empty', 'Правило не найдено. Попробуй другое слово или номер.'));
+  list.forEach(r => {
+    const c = el('div', 'rule');
+    const h = el('div', 'rh'); h.append(el('span', 'rn', r.id), el('h3', '', r.title));
+    const pen = el('div', 'pen');
+    r.pen.split('\n').forEach(l => pen.appendChild(el('span', '', l)));
+    c.append(h, pen, el('p', 'ds', r.desc));
+    c.onclick = () => {
+      copy('[' + r.id + '] ' + r.title + '\nНаказание: ' + r.pen.replace(/\n/g, '; ') + '\n' + r.desc);
+      c.classList.add('ok'); setTimeout(() => c.classList.remove('ok'), 700);
+    };
+    box.appendChild(c);
+  });
+}
+$('rq').oninput = renderRules;
+
 let view = 'main';
 function syncNav() {
   const nav = $('nav'); nav.innerHTML = '';
   const add = (label, v, c) => {
-    const on = view === 'notes' ? v === 'notes' : (v === 'main' && c === cat);
+    const on = view !== 'main' ? v === view : (v === 'main' && c === cat);
     const b = el('button', 'nav' + (on ? ' on' : ''), label);
     if (v === 'main') b.dataset.cat = c;
     b.onclick = () => { view = v; if (v === 'main') cat = c; render(); };
@@ -233,8 +285,11 @@ function syncNav() {
   add('📖 Все тексты', 'main', 'Все');
   const IC = {'Отыгровки': '🎭', 'Общение': '💬', 'ФСБ': '🕵️', 'ОПГ': '💼', 'МВД': '🚔'};
   cats().forEach(c => add((IC[c] || '📁') + ' ' + c, 'main', c));
+  add('⚖ Правила', 'rules');
   add('📝 Заметки', 'notes');
   $('vMain').style.display = view === 'main' ? '' : 'none';
+  $('vRules').style.display = view === 'rules' ? '' : 'none';
+  if (view === 'rules') renderRules();
   $('vNotes').style.display = view === 'notes' ? '' : 'none';
   $('hMain').textContent = cat === 'Все' ? 'Тексты для РП' : cat;
 }
